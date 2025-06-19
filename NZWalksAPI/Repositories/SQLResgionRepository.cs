@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper.Configuration.Annotations;
+using Microsoft.EntityFrameworkCore;
 using NZWalksAPI.Data;
 using NZWalksAPI.Models.Domain;
 
@@ -19,6 +20,19 @@ namespace NZWalksAPI.Repositories
             await dbContext.SaveChangesAsync();
             return region; // Return the created region
         }
+
+        public async Task<Region?> DeleteAsync(Guid id)
+        {
+            var existingRegion = await dbContext.Regions.FirstOrDefaultAsync(x => x.id == id);
+            if (existingRegion == null)
+            {
+                return null; 
+            }
+            dbContext.Regions.Remove(existingRegion);
+            await dbContext.SaveChangesAsync();
+            return existingRegion;
+        }
+
         public async Task<List<Region>> GetAllAsync()
         {
             return await dbContext.Regions.ToListAsync();

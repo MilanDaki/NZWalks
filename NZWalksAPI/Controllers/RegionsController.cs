@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NZWalksAPI.CustomeActionFilters;
 using NZWalksAPI.Data;
 using NZWalksAPI.Models.Domain;
 using NZWalksAPI.Models.DTO;
@@ -18,7 +19,7 @@ namespace NZWalksAPI.Controllers
         private readonly IMapper mapper;
 
         public RegionsController(NZWalksDbContext dbContext, IRegionRepository regionRepository,
-            IMapper mapper)  
+            IMapper mapper)     
         {
             this.dbContext = dbContext;
             this.regionRepository = regionRepository;
@@ -55,17 +56,19 @@ namespace NZWalksAPI.Controllers
         // Post to create new region
         // 
         [HttpPost]
+        [ValidateModel]
         public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
         {
-            // Map DTO to Domain Model
-            var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
+            
+                // Map DTO to Domain Model
+                var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
 
-            // Use Domain model to create region
-            regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
-            // Map Domain model to DTO model
-            var regionDto = mapper.Map<RegionDto>(regionDomainModel);
+                // Use Domain model to create region
+                regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
+                // Map Domain model to DTO model
+                var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
-            return CreatedAtAction(nameof(GetById), new { Id = regionDomainModel.id }, regionDomainModel);
+                return CreatedAtAction(nameof(GetById), new { Id = regionDto.Id }, regionDto);          
         }
 
         // Upadate region 
@@ -97,8 +100,7 @@ namespace NZWalksAPI.Controllers
             if (regionDomainModel == null)
             {
                 return NotFound();
-            }
-
+            }            
             // Return Ok
             return Ok(mapper.Map<RegionDto>(regionDomainModel));
         }
