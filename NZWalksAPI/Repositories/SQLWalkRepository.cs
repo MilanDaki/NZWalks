@@ -32,9 +32,37 @@ namespace NZWalksAPI.Repositories
             return existingWalk; 
         }
 
-        public async Task<List<Walks>> GetAllAsync()
+        public async Task<List<Walks>> GetAllAsync(string? filteron = null, string? filterquery = null,
+            string? sortBy = null, bool isAscending = true, int pageNumber = 1, int pagesize = 1000)
         {
-           return await dbContext.Walks.ToListAsync(); 
+            var walks = dbContext.Walks.AsQueryable();
+            // filtering
+            if (string.IsNullOrWhiteSpace(filteron) == false && string.IsNullOrWhiteSpace(filterquery) == false)
+            {
+                if (filteron.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = walks.Where(x => x.Name.Contains(filterquery));
+                } 
+            }
+
+            //sorting
+            if (string.IsNullOrWhiteSpace(sortBy) == false)
+            {
+                if (sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = isAscending ? walks.OrderBy(x => x.Name) : walks.OrderByDescending(x => x.Name); 
+                }
+                else if (sortBy.Equals("Length", StringComparison.OrdinalIgnoreCase))
+                {
+                    walks = isAscending ? walks.OrderBy(x => x.LengthInKm) : walks.OrderByDescending(x => x.LengthInKm);
+                }
+            }
+
+            // Pagination 
+            var SkipResults = (pageNumber - 1) * pagesize;
+
+            return await walks.Skip(SkipResults).Take(pagesize).ToListAsync();
+            // return await dbContext.Walks.ToListAsync(); 
         }
 
         public async Task<Walks?> GetByIdAsync(Guid id)
